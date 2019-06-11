@@ -253,6 +253,46 @@
         Благодаря этой таблице линковщик строит связи между данными в различных оюъектных файлах, собирая из них единый исполняемый файл / библиотеку. \nl
         \textbf{NB:} Единицей трансляции называется подаваемый на вход компилятору исходник со всеми включёнными в него файлами. Судя по англовики, это то, что получается после первой стадии.
     \end{enumerate}
+    \subsection{declaration/definition}
+    Объявление вводит переменную/функцию в область видимости, устанавливает её тип и, опционально, инициализирует её.
+    Пока имя не объявлено, его использовать, очевидно, нельзя. Объявление, которое полностью описывает объявлённую сущность (переменная/функция/etc) называется определением.
+    \begin{verbatim}
+        double square(double); // declaration функции
+        int tmp; // declaration
+        int def = 98; // definition
+        int square(double); // очевидный CE.
+        
+        double square(double k){
+            return k*k;
+        } // definition of declared "square"
 
+        tmp = 55; // definition
+
+        // cycling:
+
+        double f(int a){
+            return g(a-1) - 44;
+        }
+
+        double g(int a){
+            if (a > 1) return f(a-29) + 151;
+            return 9;
+        }   // цикл определений, чтобы спастись, нужно заранее объявить функции
+        // struct def/decl:
+
+        struct point;
+
+        struct point {int x; int y;};
+
+        struct cycle{
+            cycle a; // CE
+            cycle *a; // OK
+        }
+    \end{verbatim}
+    \subsection{static, headers, header-guard (карты, деньги, два ствола)}
+    Модификатор \texttt{static} работает как в жаве - это общее поле для всех экземпляров класса. Можно обратиться извне (если публичный) при помощи двух двоеточий.
+    \begin{verbatim}
+        // to be continued...
+    \end{verbatim}
 \end{document}
     
