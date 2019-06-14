@@ -770,7 +770,72 @@
     struct WorkingStudent : Student, IWorker {...};
 \end{verbatim}
 Но тогда надо будет переопределять методы 2 раза.\nl
-\textbf{Успел не всё, плюс куда-то съехали отступы :(}
+\subsection{Виртуальное наследование}
+Виртуальное наследование защищает от появления множественных объектов базового класса в иерархии наследования.
+Оно разрешает неоднозначность при выборе методов суперклассов, которые надо использовать. Каноничный пример: "ромб смерти".
+\begin{verbatim}
+    struct Foo{
+        virtual void func();
+    };
+    struct Bar : Foo {
+        int calc();
+    };
+    struct Quux : Foo {
+        double lgd();
+    };
+    struct Fail : Bar, Quux {
+        // Fail::Bar::Foo:func() VS Fail::Quux::Foo::func()
+        // а ведь в Bar и Quux можно оверрайдить...
+    };
+\end{verbatim}
+Чтобы понять, как такое исправить, вспомним, что в плюсах классы предка и наследника помещаются в памяти друг за другом. Неоднозначность возникает в двойном появлении Foo:
+\textit{Foo, Bar, Foo, Quux, Fail}. Мы хотим, чтобы отнаследованные поля от \textit{Foo} не дублировались.
+Пофиксить такой код можно так:
+\begin{verbatim}
+    struct Foo{
+        virtual void func();
+    };
+    struct Bar : public virtual Foo {  // т.к. это структура, public необязателен
+        // это только показать, что нужно публичное наследование
+        int calc();
+    };
+    struct Quux : public virtual Foo {
+        double lgd();
+    };
+    struct Fail : public Bar, public Quux {}; // OK!
+\end{verbatim}
+\textbf{NB:} это можно сломать, если написать \texttt{struct Fail : public Bar, public Quux, public Foo} \nl
+Итак, если мы отнаследуемся от Foo с исипользованием \texttt{virtual}, общая база Foo классов Bar, Quux смёрджится в единое целое. Таким образом, мы избавились от древовидной структуры наследования
+и сделали её ромбовидной. \nl
+В памяти это будет устроено так: \textit{Bar: Bar, Foo ; Quux: Quux, Foo ; Fail: Bar, Quux, Foo}. \nl
+Остался ещё один вопрос - кто будет вызывать конструктор базового класса? Мы не должны вызывать его дважды - это UB, но и тупо банить оба вызова конструктора - не выход. Рассмотрим пример.\newpage
+\begin{verbatim}
+    // autochess_figures.cpp
+    struct Figure{
+        int hp;
+        Figure(int id, int hits);
+    }; 
+    struct Naga : virtual Figure{
+        explicit Naga(int id) : Figure(id, 600) {}
+    };
+    struct Hunter : virtual Figure{
+        explicit Hunter(int id) : Figure(id, 500) {}
+    };
+    struct NagaHunter : Naga, Hunter{
+        // эта проблема ложится на плечи нижнего класса иерархии
+        // NagaHunter вызывает конструктор виртуального базового класса (2 ранга выше)
+        // у наги-охотника будет 800 хп, не выбираем между 500/600.
+        explicit NagaHunter(int id) : Figure(id, 800), Naga(id), Hunter(id);
+    };
+    ...
+    NagaHunter tidehunter(228);
+\end{verbatim}
+\subsection{пусть есть два класса B и D. B — виртуальная база D. Можно ли привести B* к D*?}
+Статик-кастом нельзя, динамик-кастом вроде как можно (честно, я не уверен). \nl
+
+Самый главный совет при множественном наследовании: \textbf{\sout{просто не пользуйтесь этой хренью, юзайте интерфейсы}}. \newpage
+
 \section{Лекции 13/14}
-\textbf{Эстафета передаётся ;)}
+\subsection{Исключения}
+
 \end{document}
